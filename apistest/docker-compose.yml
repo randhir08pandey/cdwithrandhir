@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  web:
+    image: openjdk:11-jdk-slim  # Base Docker image with Java 11
+    ports:
+      - "8081:8080"             # Map container port 8080 to host port 8080
+    volumes:
+      - ./target:/app/target    # Mount the target directory (where the compiled JAR will be) as a volume
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev  # Set the active Spring profile
+    command: ["java", "-jar", "/app/target/docker-example.jar"]
+    depends_on:
+      - db                       # Specify dependency on a database service if needed
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: docker_example
+      MYSQL_USER: docker_user
+      MYSQL_PASSWORD: root
+    ports:
+      - "3308:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:
+    driver: local

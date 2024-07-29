@@ -1,0 +1,55 @@
+# Java and Spring Boot CI/CD Pipeline
+# Build and test Java and Spring Boot projects.
+# Add steps that publish build artifacts, and more:
+# https://learn.microsoft.com/azure/devops/pipelines/languages/java
+
+name: $(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+      - develop
+
+pool:
+  vmImage: 'mycomputeragent'
+
+variables:
+  mavenVersion: '3.x'
+  javaVersion: '11'
+  mavenOptions: '-Xmx3072m'
+  buildConfiguration: 'Release'
+  artifactName: 'SpringBootApp'
+  artifactPath: '$(Build.ArtifactStagingDirectory)/$(artifactName).jar'
+
+steps:
+  - task: UseJavaVersion@1
+    inputs:
+      versionSpec: '$(javaVersion)'
+      jdkArchitecture: 'x64'
+
+  - task: Maven@3
+    inputs:
+      mavenPomFile: '**/pom.xml'
+      options: '$(mavenOptions)'
+      goals: 'package'
+      mavenVersionOption: 'Default'
+      jdkVersion: '$(javaVersion)'
+      publishJUnitResults: true
+      testResultsFiles: '**/target/test-classes/testng-results.xml'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
+
+  - task: Maven@3
+    inputs:
+      mavenPomFile: '**/pom.xml'
+      goals: 'verify'
+      mavenVersionOption: 'Default'
+      jdkVersion: '$(javaVersion)'
+
+# Optional: If you want to deploy the application, add deployment steps here
